@@ -1,261 +1,7 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Feuille de Révision Mathématiques</title>
-    <!-- Firebase SDK -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.22.2/firebase-app-compat.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.22.2/firebase-database-compat.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.22.2/firebase-auth-compat.min.js"></script>
-    
-    <style>
-        /* Styles généraux */
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            color: #333;
-            line-height: 1.6;
-            margin: 0;
-            padding: 0;
-            background-color: #f9f9f9;
-        }
-        
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: white;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        
-        /* En-tête stylisée */
-        .header {
-            background-color: #4e5de3;
-            color: white;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 25px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        
-        .character {
-            font-size: 2.5em;
-            margin-left: 15px;
-        }
-        
-        .header-buttons {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .back-button {
-            background-color: white;
-            color: #4e5de3;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: background-color 0.3s;
-        }
-        
-        .back-button:hover {
-            background-color: #f0f0f0;
-        }
-        
-        /* Styles de section */
-        section {
-            background-color: #f9f9f9;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 30px;
-            border-left: 5px solid #4e5de3;
-        }
-        
-        /* Titres */
-        h1 {
-            margin: 0;
-            font-size: 1.8em;
-        }
-        
-        h2 {
-            color: #4e5de3;
-            border-bottom: 2px solid #7fc8f8;
-            padding-bottom: 10px;
-            margin-top: 0;
-            display: flex;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        
-        h3 {
-            color: #333;
-            margin-top: 20px;
-        }
-        
-        .emoji {
-            margin-right: 10px;
-            font-size: 1.5em;
-        }
-        
-        /* Exercices */
-        .exercise {
-            background-color: rgba(127, 200, 248, 0.1);
-            padding: 15px;
-            border-radius: 8px;
-            margin: 15px 0;
-            border-left: 4px solid #7fc8f8;
-        }
-        
-        /* Zone de réponse */
-        .answer-input {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #aaa;
-            border-radius: 4px;
-            margin: 10px 0 20px 0;
-            font-size: 1rem;
-        }
-        
-        .answer-input:focus {
-            border-color: #4e5de3;
-            outline: none;
-            box-shadow: 0 0 3px rgba(78, 93, 227, 0.3);
-        }
-        
-        /* Tableaux */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 15px 0;
-        }
-        
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-        }
-        
-        th {
-            background-color: #7fc8f8;
-            color: white;
-        }
-        
-        tr:nth-child(even) {
-            background-color: rgba(127, 200, 248, 0.1);
-        }
-        
-        /* Pied de page */
-        footer {
-            text-align: center;
-            margin-top: 30px;
-            color: #777;
-            padding: 10px;
-            font-size: 0.9em;
-        }
-        
-        /* Status bar */
-        .status-bar {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background-color: #4e5de3;
-            color: white;
-            padding: 10px 20px;
-            text-align: center;
-            box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
-            z-index: 1000;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .sheet-id {
-            font-weight: bold;
-            background-color: white;
-            color: #4e5de3;
-            padding: 5px 10px;
-            border-radius: 4px;
-            margin-left: 10px;
-        }
-        
-        /* Last saved notification */
-        .save-notification {
-            font-size: 0.9em;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-        
-        .save-notification.show {
-            opacity: 1;
-        }
-        
-        /* Conteneur de contenu dynamique */
-        #worksheetContent {
-            min-height: 200px;
-        }
-        
-        /* Loader */
-        .loader {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100px;
-        }
-        
-        .loader::after {
-            content: "";
-            width: 40px;
-            height: 40px;
-            border: 5px solid #f3f3f3;
-            border-top: 5px solid #4e5de3;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <!-- En-tête principale -->
-        <div class="header">
-            <div>
-                <h1 id="worksheetTitle">Chargement...</h1>
-                <p id="worksheetSubtitle"></p>
-            </div>
-            <div class="header-buttons">
-                <button class="back-button" onclick="returnToDashboard()">← Retour</button>
-            </div>
-            <div class="character" id="characterEmoji">🧙‍♀️</div>
-        </div>
-        
-        <!-- Contenu dynamique de la feuille -->
-        <div id="worksheetContent">
-            <div class="loader"></div>
-        </div>
-        
-        <footer>
-            <p>Feuille de révision créée spécialement pour toi! 🌟</p>
-        </footer>
-    </div>
-    
-    <!-- Status bar -->
-    <div class="status-bar">
-        <div class="save-notification" id="saveNotification">Sauvegarde automatique effectuée</div>
-        <div>ID de la feuille: <span class="sheet-id" id="sheetId">Chargement...</span></div>
-    </div>
-    
     <script>
-        // Configuration Firebase
+        // Configuration Firebase - MAKE SURE THESE DETAILS ARE CORRECT FOR YOUR PROJECT
         const firebaseConfig = {
-            apiKey: "AIzaSyBnFB7ZoqliCOF1a57G0cbLOEoyMGzf9QI",
+            apiKey: "AIzaSyBnFB7ZoqliCOF1a57G0cbLOEoyMGzf9QI", // Use your actual API Key
             authDomain: "sham-s-worksheets.firebaseapp.com",
             databaseURL: "https://sham-s-worksheets-default-rtdb.firebaseio.com",
             projectId: "sham-s-worksheets",
@@ -264,133 +10,268 @@
             appId: "1:408757720197:web:fd63c16cfc0fb3afc185ec",
             measurementId: "G-CZ7BSB67LV"
         };
-        
-        // Initialiser Firebase
+
+        // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
-        
-        // Récupérer les paramètres de l'URL
+        const database = firebase.database(); // Database reference
+        const auth = firebase.auth(); // Authentication service reference
+
+        // --- DEFINE USER IDs (Paste the correct UIDs here) ---
+        const ADMIN_UID = "MH6iCAGIYdYIbVCc1YZPaWccHYg2"; // Your UID
+        const SHAM_UID = "wIZOcjwFwtONzhxdlENAR3oHplu1";  // Sham's UID
+        const CELINE_UID = "kIM5AGVYGFfTLKaUffO37FPfia63"; // Celine's UID
+        // --- END OF USER IDs ---
+
+        // Get parameters from the URL (?student=...&id=...)
         const urlParams = new URLSearchParams(window.location.search);
-        const student = urlParams.get('student');
+        const targetStudent = urlParams.get('student');
         const worksheetId = urlParams.get('id');
-        
-        // Si les paramètres nécessaires sont manquants, retourner à l'accueil
-        if (!student || !worksheetId) {
-            window.location.href = 'index.html';
-        }
-        
-        // Référence à la feuille dans la base de données
-        const worksheetRef = database.ref(`worksheets/${student}/${worksheetId}`);
-        const progressRef = database.ref(`worksheets/${student}/${worksheetId}/progress`);
-        
-        // Fonction pour charger le contenu de la feuille
-        function loadWorksheet() {
+
+        // Global references (will be set after authorization)
+        let worksheetRef = null;
+        let progressRef = null;
+
+        // --- Authentication Check ---
+        auth.onAuthStateChanged(user => {
+            if (!user) {
+                // 1. NO USER LOGGED IN: Redirect to login page
+                console.log('Worksheet: No user logged in. Redirecting to index.html');
+                window.location.href = 'index.html';
+            } else {
+                // 2. USER IS LOGGED IN: Verify authorization for this student's worksheet
+                console.log(`Worksheet: User ${user.uid} is logged in. Checking authorization for student: ${targetStudent}, worksheet: ${worksheetId}`);
+
+                // Basic check for required URL parameters
+                if (!targetStudent || !worksheetId) {
+                     console.error('Worksheet: Missing student or worksheet ID in URL.');
+                     alert("Erreur: Le nom de l'élève ou l'ID de la feuille est manquant dans l'URL.");
+                     window.location.href = 'index.html'; // Redirect if params missing
+                     return;
+                 }
+
+                let isAuthorized = false;
+                let expectedUid = null;
+
+                if (targetStudent === 'sham') {
+                    expectedUid = SHAM_UID;
+                } else if (targetStudent === 'celine') {
+                    expectedUid = CELINE_UID;
+                }
+                 // Optional: Allow admin direct view/edit if needed (DB rules already allow it)
+                 // else if (user.uid === ADMIN_UID) {
+                 //    isAuthorized = true;
+                 // }
+
+
+                // Check if the logged-in user's UID matches the expected UID for this student
+                if (expectedUid && user.uid === expectedUid) {
+                    isAuthorized = true;
+                }
+
+                if (isAuthorized) {
+                    // 3. AUTHORIZED: Set up database references and load worksheet
+                    console.log(`Worksheet: User ${user.uid} authorized for ${targetStudent}'s worksheet ${worksheetId}.`);
+                    // Set the database references now that we know the student and ID are valid for this user
+                    worksheetRef = database.ref(`worksheets/${targetStudent}/${worksheetId}`);
+                    progressRef = database.ref(`worksheets/${targetStudent}/${worksheetId}/progress`);
+                    loadWorksheetContent(); // Load the actual content
+                } else {
+                    // 4. NOT AUTHORIZED: Logged in, but wrong user for this student's worksheet
+                    console.error(`Worksheet: Authorization FAILED. User ${user.uid} attempted to access ${targetStudent}'s worksheet ${worksheetId}.`);
+                    alert("Accès Refusé. Vous n'êtes pas autorisé à voir cette feuille de travail.");
+
+                    // Redirect the user appropriately
+                    if (user.uid === SHAM_UID) {
+                        window.location.href = `dashboard.html?student=sham`;
+                    } else if (user.uid === CELINE_UID) {
+                        window.location.href = `dashboard.html?student=celine`;
+                    } else if (user.uid === ADMIN_UID) {
+                         window.location.href = 'admin.html';
+                    } else {
+                        auth.signOut().then(() => { window.location.href = 'index.html'; });
+                    }
+                }
+            }
+        });
+        // --- End of Authentication Check ---
+
+
+        // Function to load the worksheet content (only called if authorized)
+        function loadWorksheetContent() {
+            if (!worksheetRef) {
+                 console.error("Worksheet: Cannot load content, worksheetRef is not set.");
+                 displayError("Une erreur interne s'est produite (référence de base de données manquante).");
+                 return;
+            }
+
             worksheetRef.once('value', (snapshot) => {
                 const worksheetData = snapshot.val();
-                
+
                 if (!worksheetData) {
-                    // Feuille non trouvée
+                    // Worksheet data doesn't exist at this path
+                    console.error(`Worksheet: No data found for worksheets/${targetStudent}/${worksheetId}`);
                     displayError('Cette feuille de travail n\'existe pas ou a été supprimée.');
                     return;
                 }
-                
-                // Mettre à jour le titre et sous-titre
+
+                // Update page title and header info
+                document.title = worksheetData.title || `Feuille: ${worksheetId}`;
                 document.getElementById('worksheetTitle').textContent = worksheetData.title || 'Feuille de Révision';
                 document.getElementById('worksheetSubtitle').textContent = worksheetData.description || '';
-                document.getElementById('sheetId').textContent = worksheetId;
-                
-                // Charger le contenu HTML de la feuille
+                document.getElementById('sheetId').textContent = worksheetId; // Display the ID in status bar
+
+                // Set character emoji based on student
+                 const characterEmoji = document.getElementById('characterEmoji');
+                 if(targetStudent === 'sham') characterEmoji.textContent = '👧';
+                 else if(targetStudent === 'celine') characterEmoji.textContent = '👩';
+                 // Add admin case if needed
+
+                // Load the main HTML content
                 const contentContainer = document.getElementById('worksheetContent');
-                
                 if (worksheetData.content) {
-                    contentContainer.innerHTML = worksheetData.content;
-                    
-                    // Ajouter des event listeners à tous les champs de réponse
+                    contentContainer.innerHTML = worksheetData.content; // Inject the saved HTML
+                    // Add event listeners AFTER injecting HTML
                     setupAnswerFields();
-                    
-                    // Charger les réponses sauvegardées
+                    // Load any previously saved answers for this worksheet
                     loadSavedAnswers();
                 } else {
-                    displayError('Cette feuille de travail ne contient pas de contenu.');
+                    console.warn(`Worksheet: No 'content' found for ${worksheetId}`);
+                    displayError('Cette feuille de travail est vide.');
                 }
+
+            }).catch(error => {
+                 console.error(`Worksheet: Error fetching worksheet data for ${worksheetId}:`, error);
+                 displayError("Erreur lors du chargement des données de la feuille de travail.");
             });
         }
-        
-        // Fonction pour afficher une erreur
+
+        // Function to display an error message in the content area
         function displayError(message) {
             const contentContainer = document.getElementById('worksheetContent');
             contentContainer.innerHTML = `
-                <section>
+                <section style="border-color: #f44336;">
                     <h2><span class="emoji">⚠️</span> Erreur</h2>
                     <p>${message}</p>
-                    <p>Retourne au tableau de bord pour choisir une autre feuille de travail.</p>
+                    <button class="back-button" onclick="returnToDashboard()">← Retour au Tableau de Bord</button>
                 </section>
             `;
+            // Hide status bar elements on error
+             document.getElementById('sheetId').textContent = 'Erreur';
+             document.getElementById('saveNotification').style.display = 'none';
         }
-        
-        // Configurer les champs de réponse
+
+        // Configurer les champs de réponse pour sauvegarder en temps réel
         function setupAnswerFields() {
-            const answerInputs = document.querySelectorAll('.answer-input');
-            
+            // Find all elements with the class 'answer-input' INSIDE the loaded content
+            const answerInputs = document.querySelectorAll('#worksheetContent .answer-input');
+            console.log(`Worksheet: Setting up ${answerInputs.length} answer input fields.`);
+
             answerInputs.forEach(input => {
-                input.addEventListener('input', () => {
-                    saveAnswer(input.id, input.value);
+                // Use 'input' event for immediate feedback, or 'change' for on blur
+                input.addEventListener('input', (event) => {
+                    // Pass the specific input element's ID and its current value
+                    saveAnswer(event.target.id, event.target.value);
                 });
             });
         }
-        
-        // Charger les réponses sauvegardées
+
+        // Charger les réponses sauvegardées depuis la base de données
         function loadSavedAnswers() {
+             if (!progressRef) {
+                 console.error("Worksheet: Cannot load answers, progressRef is not set.");
+                 return;
+            }
+
             progressRef.once('value', (snapshot) => {
-                const data = snapshot.val();
-                if (data) {
-                    // Remplir les champs avec les données sauvegardées
-                    Object.keys(data).forEach(inputId => {
-                        const input = document.getElementById(inputId);
-                        if (input) {
-                            input.value = data[inputId];
+                const savedData = snapshot.val();
+                if (savedData && typeof savedData === 'object') {
+                     console.log("Worksheet: Loading saved answers.", savedData);
+                    // Fill input fields with the saved data
+                    Object.keys(savedData).forEach(inputId => {
+                        const inputElement = document.getElementById(inputId);
+                        if (inputElement) {
+                            // Check if the saved value is not null before setting
+                            if (savedData[inputId] !== null) {
+                                 inputElement.value = savedData[inputId];
+                            } else {
+                                 inputElement.value = ''; // Set to empty if saved value is null
+                            }
+                        } else {
+                             console.warn(`Worksheet: Saved answer found for ID "${inputId}", but no corresponding input element exists in the current content.`);
                         }
                     });
+                } else {
+                     console.log("Worksheet: No saved answers found for this worksheet.");
                 }
+            }).catch(error => {
+                 console.error("Worksheet: Error loading saved answers:", error);
             });
         }
-        
-        // Sauvegarder une réponse
-        let saveTimeout;
+
+        // Sauvegarder une réponse dans la base de données (avec délai)
+        let saveTimeout; // Timer variable for debouncing saves
         function saveAnswer(inputId, value) {
+             if (!progressRef) {
+                 console.error("Worksheet: Cannot save answer, progressRef is not set.");
+                 return;
+             }
+             if (!inputId) {
+                 console.warn("Worksheet: Attempted to save answer for an input without an ID.");
+                 return; // Cannot save without an ID
+             }
+
+            // Clear the previous timeout if user is still typing
             clearTimeout(saveTimeout);
+
+            // Set a new timeout to save after 1 second of inactivity
             saveTimeout = setTimeout(() => {
-                progressRef.child(inputId).set(value)
+                console.log(`Worksheet: Saving answer for ${inputId}: "${value}"`);
+                // Save the value under the input's ID in the 'progress' node
+                 // Using update is slightly safer than set if progress node might have other metadata
+                const dataToUpdate = {};
+                dataToUpdate[inputId] = value; // e.g., { "answer1a": "User's text" }
+
+                progressRef.update(dataToUpdate) // Use update here
                     .then(() => {
-                        // Afficher notification de sauvegarde
-                        const notification = document.getElementById('saveNotification');
-                        notification.textContent = 'Sauvegarde automatique effectuée ✓';
-                        notification.classList.add('show');
-                        
-                        setTimeout(() => {
-                            notification.classList.remove('show');
-                        }, 2000);
+                        // Show save confirmation notification
+                        showSaveNotification('Sauvegarde automatique effectuée ✓', 'success');
+                        console.log(`Worksheet: Answer saved successfully for ${inputId}.`);
                     })
                     .catch((error) => {
-                        console.error("Erreur de sauvegarde:", error);
-                        const notification = document.getElementById('saveNotification');
-                        notification.textContent = 'Erreur de sauvegarde ✗';
-                        notification.classList.add('show');
-                        
-                        setTimeout(() => {
-                            notification.classList.remove('show');
-                        }, 2000);
+                        // Show save error notification
+                        console.error(`Worksheet: Error saving answer for ${inputId}:`, error);
+                        showSaveNotification('Erreur de sauvegarde ✗', 'error');
                     });
-            }, 1000); // Sauvegarder 1 seconde après la dernière frappe
+            }, 1000); // Debounce time: 1000ms = 1 second
         }
-        
-        // Retourner au tableau de bord
+
+         // Function to show the save status notification
+         function showSaveNotification(message, type) {
+             const notification = document.getElementById('saveNotification');
+             notification.textContent = message;
+             // Add a class for styling success/error if needed
+             notification.className = 'save-notification show ' + type; // Add type class
+             notification.classList.add('show'); // Make it visible
+
+             // Hide the notification after 2 seconds
+             setTimeout(() => {
+                 notification.classList.remove('show');
+             }, 2000);
+         }
+
+
+        // Retourner au tableau de bord de l'étudiant actuel
         function returnToDashboard() {
-            window.location.href = `dashboard.html?student=${student}`;
+             // Navigate back to the dashboard page for the student associated with this worksheet
+             if (targetStudent) {
+                 window.location.href = `dashboard.html?student=${targetStudent}`;
+             } else {
+                 // Fallback if targetStudent isn't set for some reason
+                 window.location.href = 'index.html';
+             }
         }
-        
-        // Charger la feuille de travail au chargement de la page
-        document.addEventListener('DOMContentLoaded', loadWorksheet);
+
+        // Note: The old 'DOMContentLoaded' listener is removed.
+        // Initialization now happens inside the onAuthStateChanged check.
+
     </script>
-</body>
-</html>
