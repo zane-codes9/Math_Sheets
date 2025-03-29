@@ -1,440 +1,7 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin - Gestion des Feuilles de Travail</title>
-    <!-- Firebase SDK -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.22.2/firebase-app-compat.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.22.2/firebase-database-compat.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.22.2/firebase-auth-compat.min.js"></script>
-    <!-- TinyMCE pour l'éditeur de texte enrichi -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.4.1/tinymce.min.js"></script>
-    
-    <style>
-        /* Styles généraux */
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            color: #333;
-            line-height: 1.6;
-            margin: 0;
-            padding: 0;
-            background-color: #f9f9f9;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        
-        /* En-tête stylisée */
-        .header {
-            background-color: #4e5de3;
-            color: white;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 25px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        
-        .logo {
-            font-size: 1.5em;
-            font-weight: bold;
-        }
-        
-        /* Titres */
-        h1 {
-            margin: 0;
-            font-size: 1.8em;
-        }
-        
-        h2 {
-            color: #4e5de3;
-            border-bottom: 2px solid #7fc8f8;
-            padding-bottom: 10px;
-            margin-top: 0;
-        }
-        
-        h3 {
-            color: #333;
-            margin-top: 20px;
-        }
-        
-        /* Mise en page de l'administration */
-        .admin-layout {
-            display: grid;
-            grid-template-columns: 300px 1fr;
-            gap: 20px;
-        }
-        
-        /* Panneau de navigation */
-        .nav-panel {
-            background-color: white;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        
-        .nav-section {
-            margin-bottom: 30px;
-        }
-        
-        .nav-title {
-            font-weight: bold;
-            margin-bottom: 10px;
-            color: #4e5de3;
-        }
-        
-        .student-selector {
-            display: flex;
-            margin-bottom: 20px;
-        }
-        
-        .student-tab {
-            flex: 1;
-            text-align: center;
-            padding: 10px;
-            background-color: #f0f0f0;
-            cursor: pointer;
-            transition: background-color 0.3s;
-            border: 1px solid #ddd;
-        }
-        
-        .student-tab:first-child {
-            border-radius: 5px 0 0 5px;
-        }
-        
-        .student-tab:last-child {
-            border-radius: 0 5px 5px 0;
-        }
-        
-        .student-tab.active {
-            background-color: #4e5de3;
-            color: white;
-            border-color: #4e5de3;
-        }
-        
-        .worksheet-list {
-            max-height: 300px;
-            overflow-y: auto;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-        }
-        
-        .worksheet-item {
-            padding: 10px;
-            border-bottom: 1px solid #ddd;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        
-        .worksheet-item:hover {
-            background-color: #f0f0f0;
-        }
-        
-        .worksheet-item.active {
-            background-color: rgba(78, 93, 227, 0.1);
-            border-left: 3px solid #4e5de3;
-        }
-        
-        .worksheet-item:last-child {
-            border-bottom: none;
-        }
-        
-        .create-btn {
-            width: 100%;
-            background-color: #4e5de3;
-            color: white;
-            border: none;
-            padding: 10px;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-top: 10px;
-            transition: background-color 0.3s;
-        }
-        
-        .create-btn:hover {
-            background-color: #3a49c9;
-        }
-        
-        /* Panneau d'édition */
-        .edit-panel {
-            background-color: white;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .form-label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-        
-        .form-input {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 1em;
-        }
-        
-        .form-input:focus {
-            border-color: #4e5de3;
-            outline: none;
-            box-shadow: 0 0 3px rgba(78, 93, 227, 0.3);
-        }
-        
-        textarea.form-input {
-            min-height: 100px;
-            resize: vertical;
-        }
-        
-        /* Éditeur TinyMCE */
-        .editor-container {
-            margin-top: 20px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            overflow: hidden;
-        }
-        
-        /* Barre d'outils */
-        .toolbar {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px;
-            background-color: #f9f9f9;
-            border-bottom: 1px solid #ddd;
-        }
-        
-        .action-btns {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .save-btn {
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        
-        .save-btn:hover {
-            background-color: #45a049;
-        }
-        
-        .preview-btn {
-            background-color: #2196F3;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        
-        .preview-btn:hover {
-            background-color: #0b7dda;
-        }
-        
-        .delete-btn {
-            background-color: #f44336;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        
-        .delete-btn:hover {
-            background-color: #d32f2f;
-        }
-        
-        /* Statut de sauvegarde */
-        .save-status {
-            color: #777;
-            font-size: 0.9em;
-        }
-        
-        /* Template Gallery */
-        .template-gallery {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
-        }
-        
-        .template-card {
-            background-color: #f9f9f9;
-            border-radius: 5px;
-            padding: 15px;
-            cursor: pointer;
-            transition: transform 0.3s, box-shadow 0.3s;
-            text-align: center;
-            border: 1px solid #ddd;
-        }
-        
-        .template-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            border-color: #4e5de3;
-        }
-        
-        .template-icon {
-            font-size: 2em;
-            margin-bottom: 10px;
-            color: #4e5de3;
-        }
-        
-        .template-title {
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-        
-        .template-desc {
-            font-size: 0.9em;
-            color: #777;
-        }
-        
-        /* Notification de sauvegarde */
-        .notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 15px 20px;
-            border-radius: 5px;
-            color: white;
-            z-index: 1000;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
-            transform: translateX(200%);
-            transition: transform 0.3s ease-out;
-        }
-        
-        .notification.show {
-            transform: translateX(0);
-        }
-        
-        .notification.success {
-            background-color: #4CAF50;
-        }
-        
-        .notification.error {
-            background-color: #f44336;
-        }
-        
-        /* Pour les écrans plus petits */
-        @media (max-width: 768px) {
-            .admin-layout {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <!-- En-tête principale -->
-        <div class="header">
-            <div class="logo">📚 Admin - Gestion des Feuilles</div>
-            <h1>Créer et Modifier des Feuilles de Travail</h1>
-            <button class="preview-btn" onclick="goToHome()">Voir le Site</button>
-        </div>
-        
-        <!-- Disposition de l'admin -->
-        <div class="admin-layout">
-            <!-- Panneau de navigation -->
-            <div class="nav-panel">
-                <div class="nav-section">
-                    <div class="nav-title">Choisir un élève</div>
-                    <div class="student-selector">
-                        <div class="student-tab active" onclick="selectStudent('sham')" id="shamTab">Sham</div>
-                        <div class="student-tab" onclick="selectStudent('celine')" id="celineTab">Celine</div>
-                    </div>
-                </div>
-                
-                <div class="nav-section">
-                    <div class="nav-title">Feuilles de travail</div>
-                    <div class="worksheet-list" id="worksheetList">
-                        <!-- La liste sera générée dynamiquement -->
-                        <div class="worksheet-item">Chargement...</div>
-                    </div>
-                    <button class="create-btn" onclick="createNewWorksheet()">+ Nouvelle Feuille</button>
-                </div>
-                
-                <div class="nav-section">
-                    <div class="nav-title">Modèles</div>
-                    <div class="template-gallery">
-                        <div class="template-card" onclick="loadTemplate('aire')">
-                            <div class="template-icon">📏</div>
-                            <div class="template-title">Aire et Conversions</div>
-                            <div class="template-desc">Mesures d'aire et conversions décimales</div>
-                        </div>
-                        <div class="template-card" onclick="loadTemplate('fractions')">
-                            <div class="template-icon">🧮</div>
-                            <div class="template-title">Fractions</div>
-                            <div class="template-desc">Opérations avec fractions</div>
-                        </div>
-                        <div class="template-card" onclick="loadTemplate('geometrie')">
-                            <div class="template-icon">📐</div>
-                            <div class="template-title">Géométrie</div>
-                            <div class="template-desc">Figures et propriétés géométriques</div>
-                        </div>
-                        <!-- Ajouter d'autres modèles ici -->
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Panneau d'édition -->
-            <div class="edit-panel">
-                <h2>Éditer la Feuille de Travail</h2>
-                
-                <div class="form-group">
-                    <label class="form-label" for="worksheetTitle">Titre</label>
-                    <input type="text" id="worksheetTitle" class="form-input" placeholder="Titre de la feuille de travail">
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label" for="worksheetDescription">Description</label>
-                    <input type="text" id="worksheetDescription" class="form-input" placeholder="Courte description du contenu">
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label" for="worksheetDate">Date (optionnel)</label>
-                    <input type="date" id="worksheetDate" class="form-input">
-                </div>
-                
-                <div class="editor-container">
-                    <div class="toolbar">
-                        <div class="save-status" id="saveStatus">Non sauvegardé</div>
-                        <div class="action-btns">
-                            <button class="preview-btn" onclick="previewWorksheet()">Aperçu</button>
-                            <button class="save-btn" onclick="saveWorksheet()">Enregistrer</button>
-                            <button class="delete-btn" onclick="confirmDelete()">Supprimer</button>
-                        </div>
-                    </div>
-                    <textarea id="worksheetContent"></textarea>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Notification de sauvegarde -->
-    <div class="notification" id="notification"></div>
-    
     <script>
-        // Configuration Firebase
+        // Configuration Firebase - MAKE SURE THESE DETAILS ARE CORRECT FOR YOUR PROJECT
         const firebaseConfig = {
-            apiKey: "AIzaSyBnFB7ZoqliCOF1a57G0cbLOEoyMGzf9QI",
+            apiKey: "AIzaSyBnFB7ZoqliCOF1a57G0cbLOEoyMGzf9QI", // Use your actual API Key
             authDomain: "sham-s-worksheets.firebaseapp.com",
             databaseURL: "https://sham-s-worksheets-default-rtdb.firebaseio.com",
             projectId: "sham-s-worksheets",
@@ -443,437 +10,523 @@
             appId: "1:408757720197:web:fd63c16cfc0fb3afc185ec",
             measurementId: "G-CZ7BSB67LV"
         };
-        
-        // Initialiser Firebase
+
+        // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
-        
-        // Variables globales
-        let currentStudent = 'sham';
+        const database = firebase.database(); // Database reference
+        const auth = firebase.auth(); // Authentication service reference
+
+        // --- DEFINE THE ADMIN UID (Paste the correct UID here) ---
+        const ADMIN_UID = "MH6iCAGIYdYIbVCc1YZPaWccHYg2"; // Your UID
+        // --- END OF ADMIN UID ---
+
+        // Global Admin Page Variables
+        let currentStudent = 'sham'; // Default student view
         let currentWorksheetId = null;
         let isNewWorksheet = false;
-        let editor;
-        
-        // Initialiser TinyMCE
-        tinymce.init({
-            selector: '#worksheetContent',
-            height: 500,
-            plugins: 'advlist autolink lists link image charmap preview anchor searchreplace visualblocks code fullscreen insertdatetime media table paste help wordcount',
-            toolbar: 'undo redo | formatselect | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help',
-            setup: function(ed) {
-                editor = ed;
-                ed.on('change', function() {
-                    document.getElementById('saveStatus').textContent = 'Modifications non sauvegardées';
-                });
+        let editor; // TinyMCE editor instance
+
+        // --- Authentication Check ---
+        auth.onAuthStateChanged(user => {
+            if (!user) {
+                // 1. NO USER LOGGED IN: Redirect to login page
+                console.log('Admin: No user logged in. Redirecting to index.html');
+                window.location.href = 'index.html';
+            } else {
+                // 2. USER IS LOGGED IN: Verify they are the Admin
+                console.log(`Admin: User ${user.uid} is logged in. Verifying admin status...`);
+
+                if (user.uid === ADMIN_UID) {
+                    // 3. AUTHORIZED (IS ADMIN): Initialize the admin page functionality
+                    console.log(`Admin: User ${user.uid} is authorized. Initializing admin panel.`);
+                    initializeAdminPanel();
+                } else {
+                    // 4. NOT AUTHORIZED (Not Admin): Redirect non-admins away
+                    console.error(`Admin: Authorization FAILED. User ${user.uid} is not the designated admin (${ADMIN_UID}). Redirecting.`);
+                    alert("Accès Refusé. Seul l'administrateur peut accéder à cette page.");
+                    window.location.href = 'index.html'; // Send non-admins back to login
+                }
             }
         });
-        
-        // Charger la liste des feuilles de travail pour l'élève actuel
+        // --- End of Authentication Check ---
+
+
+        // Function to initialize the admin panel (TinyMCE and default view)
+        // This is called ONLY after confirming the user is the admin
+        function initializeAdminPanel() {
+            console.log("Admin: Initializing TinyMCE editor...");
+            tinymce.init({
+                selector: '#worksheetContent',
+                height: 500,
+                 plugins: 'preview importcss searchreplace autolink autosave save directionality code visualblocks visualchars fullscreen image link media template codesample table charmap pagebreak nonbreaking anchor insertdatetime advlist lists wordcount help charmap quickbars emoticons',
+                 menubar: 'file edit view insert format tools table help',
+                 toolbar: 'undo redo | bold italic underline strikethrough | fontfamily fontsize blocks | alignleft aligncenter alignright alignjustify | outdent indent |  numlist bullist | forecolor backcolor removeformat | pagebreak | charmap emoticons | fullscreen  preview save print | insertfile image media template link anchor codesample | ltr rtl',
+
+                // Example of content_css if you want editor styles to match worksheet.html
+                // content_css: 'worksheet_styles.css', // You'd need to create this CSS file
+
+                // Autosave feature (optional but useful)
+                autosave_ask_before_unload: true,
+                autosave_interval: '30s', // e.g., save every 30 seconds
+                autosave_prefix: '{path}{query}-{id}-',
+                autosave_restore_when_empty: false,
+                autosave_retention: '2m', // Keep drafts for 2 minutes
+
+                setup: function(ed) {
+                    editor = ed; // Assign the editor instance globally
+                    console.log("Admin: TinyMCE initialized.");
+                    // Add listener for changes to update save status
+                    ed.on('change dirty', function() {
+                        document.getElementById('saveStatus').textContent = 'Modifications non sauvegardées';
+                    });
+                     // Optional: Clear autosave draft on explicit save
+                     ed.on('ExecCommand', function(e) {
+                          if (e.command === 'mceSave') { // If using a TinyMCE save button
+                               editor.plugins.autosave.removeDraft();
+                          }
+                     });
+                }
+            });
+
+            // Set the default student view after editor might be ready
+            // Use a small timeout to ensure TinyMCE is likely initialized
+            setTimeout(() => {
+                 console.log("Admin: Setting initial student view to 'sham'.");
+                 selectStudent('sham'); // Load Sham's worksheets by default
+            }, 500); // Adjust timeout if needed
+
+            // Add Logout Button functionality (optional, could be added to HTML too)
+            const header = document.querySelector('.header');
+             if (header) {
+                 const logoutButton = document.createElement('button');
+                 logoutButton.textContent = 'Déconnexion';
+                 logoutButton.className = 'delete-btn'; // Use existing style or create new one
+                 logoutButton.style.marginLeft = '15px'; // Add some spacing
+                 logoutButton.onclick = () => {
+                     if (confirm('Voulez-vous vous déconnecter ?')) {
+                         auth.signOut().then(() => {
+                             window.location.href = 'index.html';
+                         }).catch(err => console.error("Logout error:", err));
+                     }
+                 };
+                 // Append after the "Voir le Site" button
+                 const previewSiteButton = header.querySelector('.preview-btn[onclick="goToHome()"]');
+                 if (previewSiteButton) {
+                     previewSiteButton.parentNode.insertBefore(logoutButton, previewSiteButton.nextSibling);
+                 } else {
+                      header.appendChild(logoutButton); // Fallback append
+                 }
+             }
+        }
+
+
+        // --- All Original Admin Functions (selectStudent, loadWorksheetList, etc.) ---
+        // --- These functions remain largely the same as they handle the UI logic ---
+        // --- after authorization is confirmed. ---
+
         function loadWorksheetList() {
+            console.log(`Admin: Loading worksheet list for ${currentStudent}...`);
             const worksheetsRef = database.ref(`worksheets/${currentStudent}`);
-            
+
             worksheetsRef.once('value', (snapshot) => {
                 const worksheetList = document.getElementById('worksheetList');
-                worksheetList.innerHTML = '';
-                
+                worksheetList.innerHTML = ''; // Clear loading message
                 const data = snapshot.val();
-                
+
                 if (!data) {
                     worksheetList.innerHTML = '<div class="worksheet-item">Aucune feuille disponible</div>';
+                    console.log(`Admin: No worksheets found for ${currentStudent}.`);
                     return;
                 }
-                
-                // Créer un élément pour chaque feuille de travail
-                Object.keys(data).forEach(worksheetId => {
+
+                 // Sort keys (optional: by title or date)
+                 const sortedKeys = Object.keys(data).sort((a,b) => {
+                      const titleA = data[a].title || '';
+                      const titleB = data[b].title || '';
+                      return titleA.localeCompare(titleB);
+                 });
+
+                console.log(`Admin: Found ${sortedKeys.length} worksheets for ${currentStudent}.`);
+                 sortedKeys.forEach(worksheetId => {
                     const worksheet = data[worksheetId];
                     const listItem = document.createElement('div');
                     listItem.className = 'worksheet-item';
+                    listItem.dataset.id = worksheetId; // Store ID for easier selection later
                     if (worksheetId === currentWorksheetId) {
                         listItem.classList.add('active');
                     }
                     listItem.textContent = worksheet.title || 'Sans titre';
+                    listItem.title = `ID: ${worksheetId}\nDescription: ${worksheet.description || '-'}\nDate: ${worksheet.date || '-'}`; // Tooltip
                     listItem.onclick = () => selectWorksheet(worksheetId);
-                    
                     worksheetList.appendChild(listItem);
                 });
+            }).catch(error => {
+                 console.error(`Admin: Error loading worksheet list for ${currentStudent}:`, error);
+                 worksheetList.innerHTML = `<div class="worksheet-item" style="color: red;">Erreur de chargement</div>`;
             });
         }
-        
-        // Sélectionner un élève
+
         function selectStudent(student) {
+             if (currentStudent === student && document.getElementById('worksheetList').children.length > 0 && document.getElementById('worksheetList').children[0].textContent !== 'Chargement...') {
+                 console.log(`Admin: Student ${student} already selected.`);
+                 return; // Avoid unnecessary reloads if already on this student
+             }
+            console.log(`Admin: Selecting student: ${student}`);
             currentStudent = student;
-            currentWorksheetId = null;
-            
-            // Mettre à jour l'interface
+            currentWorksheetId = null; // Deselect worksheet when changing student
+            isNewWorksheet = false; // Reset flag
+
+            // Update UI tabs
             document.getElementById('shamTab').classList.toggle('active', student === 'sham');
             document.getElementById('celineTab').classList.toggle('active', student === 'celine');
-            
-            // Recharger la liste des feuilles
+
+            // Reload worksheet list for the selected student
             loadWorksheetList();
-            
-            // Réinitialiser le formulaire
-            document.getElementById('worksheetTitle').value = '';
-            document.getElementById('worksheetDescription').value = '';
-            document.getElementById('worksheetDate').value = '';
-            editor.setContent('');
+
+            // Reset the edit form
+            resetEditForm();
+            document.getElementById('saveStatus').textContent = 'Prêt';
         }
-        
-        // Sélectionner une feuille de travail
+
+         function resetEditForm() {
+             document.getElementById('worksheetTitle').value = '';
+             document.getElementById('worksheetDescription').value = '';
+             document.getElementById('worksheetDate').value = '';
+             // Ensure editor is ready before setting content
+             if (editor) {
+                 editor.setContent('');
+                 editor.setDirty(false); // Mark as not modified
+             } else {
+                 // Fallback if editor isn't ready yet
+                 document.getElementById('worksheetContent').value = '';
+             }
+             document.getElementById('saveStatus').textContent = 'Prêt';
+         }
+
+
         function selectWorksheet(worksheetId) {
+             if (currentWorksheetId === worksheetId && !isNewWorksheet) {
+                  console.log(`Admin: Worksheet ${worksheetId} already selected.`);
+                  return; // Avoid reloading if already selected
+             }
+            console.log(`Admin: Selecting worksheet: ${worksheetId} for student ${currentStudent}`);
             currentWorksheetId = worksheetId;
             isNewWorksheet = false;
-            
-            // Mettre à jour la liste
-            const items = document.querySelectorAll('.worksheet-item');
-            items.forEach(item => item.classList.remove('active'));
-            
-            // Trouver et activer l'élément sélectionné
-            items.forEach(item => {
-                if (item.textContent.includes(document.getElementById('worksheetTitle').value)) {
-                    item.classList.add('active');
-                }
+
+            // Update active item in the list
+            const listItems = document.querySelectorAll('.worksheet-list .worksheet-item');
+            listItems.forEach(item => {
+                item.classList.toggle('active', item.dataset.id === worksheetId);
             });
-            
-            // Charger les données de la feuille
+
+            // Fetch worksheet data from Firebase
             const worksheetRef = database.ref(`worksheets/${currentStudent}/${worksheetId}`);
-            
             worksheetRef.once('value', (snapshot) => {
                 const data = snapshot.val();
-                
                 if (data) {
+                    console.log(`Admin: Loading data for worksheet ${worksheetId}`);
                     document.getElementById('worksheetTitle').value = data.title || '';
                     document.getElementById('worksheetDescription').value = data.description || '';
                     document.getElementById('worksheetDate').value = data.date || '';
-                    
-                    if (data.content) {
-                        editor.setContent(data.content);
+
+                    // Set content in TinyMCE editor
+                    if (editor) {
+                         editor.setContent(data.content || '');
+                         editor.setDirty(false); // Mark as not modified initially
+                         document.getElementById('saveStatus').textContent = 'Chargé';
                     } else {
-                        editor.setContent('');
+                         console.warn("Admin: TinyMCE editor not ready when trying to set content.");
+                         document.getElementById('worksheetContent').value = data.content || ''; // Fallback
+                         document.getElementById('saveStatus').textContent = 'Chargé (Editeur non prêt)';
                     }
-                    
-                    document.getElementById('saveStatus').textContent = 'Chargé';
+
+                } else {
+                    console.error(`Admin: Data not found for worksheet ${worksheetId}`);
+                    showNotification(`Erreur: Feuille ${worksheetId} non trouvée.`, 'error');
+                    resetEditForm();
+                    currentWorksheetId = null; // Deselect if not found
+                    loadWorksheetList(); // Refresh list
                 }
+            }).catch(error => {
+                 console.error(`Admin: Error loading worksheet ${worksheetId}:`, error);
+                 showNotification('Erreur lors du chargement de la feuille.', 'error');
+                 resetEditForm();
             });
         }
-        
-        // Créer une nouvelle feuille de travail
+
         function createNewWorksheet() {
+            console.log(`Admin: Creating new worksheet for student ${currentStudent}`);
             isNewWorksheet = true;
-            currentWorksheetId = generateWorksheetId();
-            
-            // Réinitialiser le formulaire
+            // Generate a unique ID using Firebase push keys for better collision avoidance
+            currentWorksheetId = database.ref(`worksheets/${currentStudent}`).push().key;
+            console.log(`Admin: New worksheet ID generated: ${currentWorksheetId}`);
+
+
+            // Reset form fields for the new worksheet
             document.getElementById('worksheetTitle').value = 'Nouvelle Feuille';
-            document.getElementById('worksheetDescription').value = 'Description de la nouvelle feuille';
-            
-            // Date du jour
+            document.getElementById('worksheetDescription').value = '';
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('worksheetDate').value = today;
-            
-            // Contenu vide
-            editor.setContent('<section id="intro"><h2><span class="emoji">📝</span> Introduction</h2><p>Contenu de votre feuille de travail ici...</p></section>');
-            
+
+            // Default content for new worksheet
+            const defaultContent = `<section id="intro">
+    <h2><span class="emoji">📝</span> Nouveau Titre</h2>
+    <p>Commencez à ajouter du contenu ici...</p>
+</section>
+<div class="exercise">
+    <h3>Exercice 1</h3>
+    <p>Question:</p>
+    <input type="text" class="answer-input" id="answer1a" placeholder="Réponse pour Exercice 1a">
+</div>`;
+            if (editor) {
+                 editor.setContent(defaultContent);
+                 editor.setDirty(true); // Mark as needing save immediately
+            } else {
+                 document.getElementById('worksheetContent').value = defaultContent;
+            }
+
             document.getElementById('saveStatus').textContent = 'Nouvelle feuille - Non sauvegardée';
-            
-            // Mettre à jour la liste en ajoutant temporairement
+
+            // Update the list visually - add temporary item and make active
             const worksheetList = document.getElementById('worksheetList');
-            const items = document.querySelectorAll('.worksheet-item');
-            items.forEach(item => item.classList.remove('active'));
-            
+            const listItems = worksheetList.querySelectorAll('.worksheet-item');
+            listItems.forEach(item => item.classList.remove('active')); // Deactivate others
+
             const newItem = document.createElement('div');
             newItem.className = 'worksheet-item active';
-            newItem.textContent = 'Nouvelle Feuille';
-            worksheetList.prepend(newItem);
+            newItem.dataset.id = currentWorksheetId; // Set the new ID
+            newItem.textContent = 'Nouvelle Feuille (en cours...)';
+            newItem.onclick = () => selectWorksheet(currentWorksheetId);
+            worksheetList.prepend(newItem); // Add to top of list
+
+            // Focus the title field for immediate editing
+            document.getElementById('worksheetTitle').focus();
+            document.getElementById('worksheetTitle').select();
         }
-        
-        // Générer un ID pour une nouvelle feuille
-        function generateWorksheetId() {
-            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-            let result = '';
-            for (let i = 0; i < 10; i++) {
-                result += chars.charAt(Math.floor(Math.random() * chars.length));
-            }
-            return result;
-        }
-        
-        // Sauvegarder la feuille de travail
+
+        // NOTE: generateWorksheetId is no longer needed as we use Firebase push keys
+
         function saveWorksheet() {
             if (!currentWorksheetId) {
-                showNotification('Erreur: Aucune feuille sélectionnée', 'error');
+                showNotification('Erreur: Aucune feuille sélectionnée ou créée.', 'error');
+                console.error("Admin: Save attempt with no currentWorksheetId.");
                 return;
             }
-            
-            const title = document.getElementById('worksheetTitle').value;
-            const description = document.getElementById('worksheetDescription').value;
+             if (!editor) {
+                 showNotification("Erreur: L'éditeur n'est pas prêt.", 'error');
+                 console.error("Admin: Save attempt before editor is ready.");
+                 return;
+             }
+
+            const title = document.getElementById('worksheetTitle').value.trim();
+            const description = document.getElementById('worksheetDescription').value.trim();
             const date = document.getElementById('worksheetDate').value;
-            const content = editor.getContent();
-            
+            const content = editor.getContent(); // Get content from TinyMCE
+
             if (!title) {
-                showNotification('Veuillez ajouter un titre', 'error');
+                showNotification('Veuillez entrer un titre pour la feuille.', 'error');
+                document.getElementById('worksheetTitle').focus();
                 return;
             }
-            
-            // Préparer les données à sauvegarder
+            if (!content) {
+                 if (!confirm("Le contenu de la feuille est vide. Voulez-vous sauvegarder quand même ?")) {
+                      return;
+                 }
+            }
+
+
+            console.log(`Admin: Saving worksheet ${currentWorksheetId} for student ${currentStudent}...`);
+            document.getElementById('saveStatus').textContent = 'Sauvegarde en cours...';
+
+            // Data object to save/update
             const worksheetData = {
                 title: title,
                 description: description,
                 date: date,
                 content: content,
-                lastUpdated: new Date().toISOString()
+                lastUpdated: firebase.database.ServerValue.TIMESTAMP // Use server timestamp
             };
-            
-            // Si c'est une nouvelle feuille, initialiser progress
-            if (isNewWorksheet) {
-                worksheetData.progress = {};
-            }
-            
-            // Référence à la feuille dans la base de données
+
+            // If it was a new worksheet, ensure the progress node is initialized
+            // We use 'update' which allows creating the initial node safely
+             if (isNewWorksheet) {
+                 worksheetData.progress = {}; // Initialize progress for new sheets
+             }
+
+
+            // Reference to the specific worksheet node
             const worksheetRef = database.ref(`worksheets/${currentStudent}/${currentWorksheetId}`);
-            
-            // Sauvegarder
+
+            // Use update() to save - it creates or overwrites specified fields
             worksheetRef.update(worksheetData)
                 .then(() => {
+                    console.log(`Admin: Worksheet ${currentWorksheetId} saved successfully.`);
                     document.getElementById('saveStatus').textContent = 'Sauvegardé';
-                    showNotification('Feuille de travail sauvegardée avec succès!', 'success');
-                    
-                    // Si c'était une nouvelle feuille, mettre à jour la liste
-                    if (isNewWorksheet) {
-                        isNewWorksheet = false;
-                        loadWorksheetList();
-                    }
+                    if(editor) editor.setDirty(false); // Mark editor as clean
+                     // If autosave is enabled, remove the draft
+                     if (editor && editor.plugins.autosave) {
+                          editor.plugins.autosave.removeDraft();
+                     }
+
+                    showNotification('Feuille de travail sauvegardée avec succès !', 'success');
+
+                    // If it was a new sheet, refresh the list to show the final title
+                     if (isNewWorksheet) {
+                         isNewWorksheet = false; // It's saved now, no longer "new"
+                         loadWorksheetList(); // Refresh list to show proper title and make it selectable
+                         // Re-select the item after list refresh
+                         setTimeout(() => {
+                              const listItems = document.querySelectorAll('.worksheet-list .worksheet-item');
+                              listItems.forEach(item => {
+                                   item.classList.toggle('active', item.dataset.id === currentWorksheetId);
+                              });
+                         }, 300); // Small delay for list refresh
+                     } else {
+                          // Update title in the list if it changed
+                           const listItem = document.querySelector(`.worksheet-list .worksheet-item[data-id="${currentWorksheetId}"]`);
+                           if (listItem && listItem.textContent !== title) {
+                                listItem.textContent = title;
+                           }
+                     }
                 })
                 .catch((error) => {
-                    console.error("Erreur de sauvegarde:", error);
-                    showNotification('Erreur lors de la sauvegarde', 'error');
+                    console.error(`Admin: Error saving worksheet ${currentWorksheetId}:`, error);
+                    document.getElementById('saveStatus').textContent = 'Erreur de sauvegarde';
+                    showNotification(`Erreur lors de la sauvegarde: ${error.message}`, 'error');
                 });
         }
-        
-        // Aperçu de la feuille de travail
+
         function previewWorksheet() {
-            if (!currentWorksheetId) {
-                showNotification('Erreur: Aucune feuille sélectionnée', 'error');
-                return;
+            if (!currentWorksheetId || isNewWorksheet) {
+                 // Ask to save if it's a new, unsaved sheet
+                 if (isNewWorksheet && confirm("Veuillez d'abord enregistrer la nouvelle feuille avant de prévisualiser. Enregistrer maintenant ?")) {
+                      saveWorksheet();
+                      // Need to wait for save to complete before opening preview? Or just let save happen async?
+                      // Let's allow opening preview immediately after initiating save for faster workflow.
+                 } else if (isNewWorksheet) {
+                     return; // User cancelled save
+                 } else {
+                      showNotification('Veuillez sélectionner ou enregistrer une feuille avant de prévisualiser.', 'error');
+                      return;
+                 }
             }
-            
-            // Sauvegarder d'abord
-            saveWorksheet();
-            
-            // Ouvrir l'aperçu dans un nouvel onglet
-            window.open(`worksheet.html?student=${currentStudent}&id=${currentWorksheetId}`, '_blank');
+
+             // Optionally save changes before previewing existing sheet
+             if (editor && editor.isDirty()) {
+                 if (confirm("Vous avez des modifications non enregistrées. Enregistrer avant de prévisualiser ?")) {
+                      saveWorksheet();
+                      // As above, let save happen async and open preview immediately
+                 } else {
+                     console.log("Admin: Preview cancelled due to unsaved changes.");
+                     return; // User chose not to save
+                 }
+             }
+
+
+            console.log(`Admin: Opening preview for worksheet ${currentWorksheetId} of student ${currentStudent}`);
+            // Construct the URL for the student's worksheet view
+            const previewUrl = `worksheet.html?student=${currentStudent}&id=${currentWorksheetId}`;
+            window.open(previewUrl, '_blank'); // Open in a new tab
         }
-        
-        // Supprimer la feuille de travail
+
         function confirmDelete() {
-            if (!currentWorksheetId) {
-                showNotification('Erreur: Aucune feuille sélectionnée', 'error');
+            if (!currentWorksheetId || isNewWorksheet) {
+                showNotification('Veuillez sélectionner une feuille existante à supprimer.', 'error');
                 return;
             }
-            
-            if (confirm("Êtes-vous sûr de vouloir supprimer cette feuille de travail? Cette action est irréversible.")) {
-                // Référence à la feuille dans la base de données
+
+            const worksheetTitle = document.getElementById('worksheetTitle').value || 'cette feuille';
+            if (confirm(`Êtes-vous sûr de vouloir supprimer "${worksheetTitle}"? Cette action est irréversible.`)) {
+                console.log(`Admin: Attempting to delete worksheet ${currentWorksheetId} for student ${currentStudent}`);
+                // Reference to the worksheet node
                 const worksheetRef = database.ref(`worksheets/${currentStudent}/${currentWorksheetId}`);
-                
-                // Supprimer
+
+                // Remove the data at that node
                 worksheetRef.remove()
                     .then(() => {
-                        showNotification('Feuille de travail supprimée', 'success');
-                        
-                        // Réinitialiser et recharger
+                        console.log(`Admin: Worksheet ${currentWorksheetId} deleted successfully.`);
+                        showNotification('Feuille de travail supprimée.', 'success');
+
+                        // Reset UI after deletion
                         currentWorksheetId = null;
-                        document.getElementById('worksheetTitle').value = '';
-                        document.getElementById('worksheetDescription').value = '';
-                        document.getElementById('worksheetDate').value = '';
-                        editor.setContent('');
-                        loadWorksheetList();
+                        isNewWorksheet = false;
+                        resetEditForm();
+                        loadWorksheetList(); // Refresh the list
                     })
                     .catch((error) => {
-                        console.error("Erreur de suppression:", error);
-                        showNotification('Erreur lors de la suppression', 'error');
+                        console.error(`Admin: Error deleting worksheet ${currentWorksheetId}:`, error);
+                        showNotification(`Erreur lors de la suppression: ${error.message}`, 'error');
                     });
+            } else {
+                 console.log("Admin: Delete cancelled by user.");
             }
         }
-        
-        // Charger un modèle
+
         function loadTemplate(templateName) {
-            // Définir les modèles de base
+            console.log(`Admin: Loading template '${templateName}'...`);
+            // Define templates (keep this or fetch from DB/JSON file later)
             const templates = {
+                 'aire': { /* ... template content ... */ },
+                 'fractions': { /* ... template content ... */ },
+                 'geometrie': { /* ... template content ... */ }
+                // Make sure the content is defined as in your original file
+                // Example for 'aire':
                 'aire': {
-                    title: "Aire et Conversions",
-                    description: "Mesures d'aire et conversions décimales",
-                    content: `
-                    <section id="intro">
-                        <h2><span class="emoji">📝</span> Introduction</h2>
-                        <p>Cette feuille de révision va t'aider à maîtriser:</p>
-                        <ul>
-                            <li>Les unités de mesure d'aire</li>
-                            <li>Comment choisir l'unité appropriée</li>
-                            <li>Comment mesurer et calculer l'aire</li>
-                            <li>Comment convertir entre décimales, fractions et pourcentages</li>
-                        </ul>
-                    </section>
-                    
-                    <section id="unitesMesure">
-                        <h2><span class="emoji">📏</span> Les Unités de Mesure (Aire)</h2>
-                        <p>L'aire est la mesure de la surface occupée par une figure plane. On l'exprime généralement en unités carrées.</p>
-                        
-                        <div class="exercise">
-                            <h3>Les unités d'aire principales:</h3>
-                            <table>
-                                <tr>
-                                    <th>Unité</th>
-                                    <th>Symbole</th>
-                                    <th>Équivalence</th>
-                                    <th>Exemple d'utilisation</th>
-                                </tr>
-                                <tr>
-                                    <td>Kilomètre carré</td>
-                                    <td>km²</td>
-                                    <td>1 000 000 m²</td>
-                                    <td>Surface d'une ville</td>
-                                </tr>
-                                <!-- Ajouter d'autres unités ici -->
-                            </table>
-                        </div>
-                        
-                        <div class="exercise">
-                            <h3>Exercice 1: Classer les unités d'aire</h3>
-                            <p>Classe les unités suivantes dans les bonnes catégories:</p>
-                            <p><strong>Unités disponibles:</strong> km², ha, m², a, cm², mm², dm²</p>
-                            
-                            <p>a) Grandes surfaces:</p>
-                            <input type="text" class="answer-input" id="answer1a" placeholder="Ta réponse ici...">
-                            
-                            <p>b) Surfaces moyennes:</p>
-                            <input type="text" class="answer-input" id="answer1b" placeholder="Ta réponse ici...">
-                            
-                            <p>c) Petites surfaces:</p>
-                            <input type="text" class="answer-input" id="answer1c" placeholder="Ta réponse ici...">
-                        </div>
-                    </section>
-                    `
-                },
-                'fractions': {
-                    title: "Opérations avec Fractions",
-                    description: "Addition, soustraction, multiplication et division de fractions",
-                    content: `
-                    <section id="intro">
-                        <h2><span class="emoji">📝</span> Introduction</h2>
-                        <p>Cette feuille de révision va t'aider à maîtriser les opérations avec les fractions:</p>
-                        <ul>
-                            <li>Addition et soustraction de fractions</li>
-                            <li>Multiplication et division de fractions</li>
-                            <li>Simplification de fractions</li>
-                            <li>Conversion entre fractions, décimales et pourcentages</li>
-                        </ul>
-                    </section>
-                    
-                    <section id="additionSoustraction">
-                        <h2><span class="emoji">➕</span> Addition et Soustraction de Fractions</h2>
-                        <p>Pour additionner ou soustraire des fractions, il faut d'abord avoir le même dénominateur.</p>
-                        
-                        <div class="exercise">
-                            <h3>Exercice 1: Addition de fractions</h3>
-                            <p>Calcule les additions suivantes:</p>
-                            
-                            <p>a) 1/4 + 2/4 = </p>
-                            <input type="text" class="answer-input" id="answer1a" placeholder="Ta réponse ici...">
-                            
-                            <p>b) 1/3 + 1/6 = </p>
-                            <input type="text" class="answer-input" id="answer1b" placeholder="Ta réponse ici...">
-                            
-                            <p>c) 2/5 + 1/10 = </p>
-                            <input type="text" class="answer-input" id="answer1c" placeholder="Ta réponse ici...">
-                        </div>
-                    </section>
-                    `
-                },
-                'geometrie': {
-                    title: "Géométrie",
-                    description: "Propriétés des figures géométriques",
-                    content: `
-                    <section id="intro">
-                        <h2><span class="emoji">📝</span> Introduction</h2>
-                        <p>Cette feuille de révision va t'aider à maîtriser:</p>
-                        <ul>
-                            <li>Les propriétés des polygones</li>
-                            <li>Les angles dans les figures géométriques</li>
-                            <li>Les quadrilatères particuliers</li>
-                            <li>La symétrie et les transformations</li>
-                        </ul>
-                    </section>
-                    
-                    <section id="polygones">
-                        <h2><span class="emoji">📐</span> Les Polygones</h2>
-                        <p>Un polygone est une figure plane fermée limitée par des segments de droite.</p>
-                        
-                        <div class="exercise">
-                            <h3>Exercice 1: Identifier les polygones</h3>
-                            <p>Nomme les polygones suivants selon leur nombre de côtés:</p>
-                            
-                            <p>a) 3 côtés:</p>
-                            <input type="text" class="answer-input" id="answer1a" placeholder="Ta réponse ici...">
-                            
-                            <p>b) 4 côtés:</p>
-                            <input type="text" class="answer-input" id="answer1b" placeholder="Ta réponse ici...">
-                            
-                            <p>c) 5 côtés:</p>
-                            <input type="text" class="answer-input" id="answer1c" placeholder="Ta réponse ici...">
-                            
-                            <p>d) 6 côtés:</p>
-                            <input type="text" class="answer-input" id="answer1d" placeholder="Ta réponse ici...">
-                        </div>
-                    </section>
-                    `
-                }
+                     title: "Aire et Conversions",
+                     description: "Mesures d'aire et conversions décimales",
+                     content: `<section id="intro"><h2><span class="emoji">📝</span> Introduction</h2><p>Cette feuille de révision va t'aider à maîtriser:</p><ul><li>Les unités de mesure d'aire</li><li>Comment choisir l'unité appropriée</li><li>Comment mesurer et calculer l'aire</li><li>Comment convertir entre décimales, fractions et pourcentages</li></ul></section><section id="unitesMesure"><h2><span class="emoji">📏</span> Les Unités de Mesure (Aire)</h2><p>L'aire est la mesure de la surface occupée par une figure plane. On l'exprime généralement en unités carrées.</p><div class="exercise"><h3>Les unités d'aire principales:</h3><table><tr><th>Unité</th><th>Symbole</th><th>Équivalence</th><th>Exemple d'utilisation</th></tr><tr><td>Kilomètre carré</td><td>km²</td><td>1 000 000 m²</td><td>Surface d'une ville</td></tr><tr><td>Hectare</td><td>ha</td><td>10 000 m²</td><td>Surface d'un terrain agricole</td></tr><tr><td>Are</td><td>a</td><td>100 m²</td><td>Petite parcelle de terrain</td></tr><tr><td>Mètre carré</td><td>m²</td><td>Unité de base</td><td>Surface d'une chambre</td></tr><tr><td>Décimètre carré</td><td>dm²</td><td>0,01 m²</td><td>Surface d'un livre</td></tr><tr><td>Centimètre carré</td><td>cm²</td><td>0,0001 m²</td><td>Surface d'un timbre</td></tr><tr><td>Millimètre carré</td><td>mm²</td><td>0,000001 m²</td><td>Section d'un fil électrique</td></tr></table></div><div class="exercise"><h3>Exercice 1: Classer les unités d'aire</h3><p>Classe les unités suivantes dans les bonnes catégories:</p><p><strong>Unités disponibles:</strong> km², ha, m², a, cm², mm², dm²</p><p>a) Grandes surfaces:</p><input type="text" class="answer-input" id="answer1a" placeholder="Ta réponse ici..."><p>b) Surfaces moyennes:</p><input type="text" class="answer-input" id="answer1b" placeholder="Ta réponse ici..."><p>c) Petites surfaces:</p><input type="text" class="answer-input" id="answer1c" placeholder="Ta réponse ici..."></div></section>`
+                 },
+                 // Add other templates back here...
             };
-            
-            // Vérifier si le modèle existe
+
+
             if (!templates[templateName]) {
-                showNotification('Modèle non trouvé', 'error');
+                showNotification('Erreur: Modèle non trouvé.', 'error');
+                console.error(`Admin: Template '${templateName}' not found.`);
                 return;
             }
-            
-            // Créer une nouvelle feuille avec le modèle
-            isNewWorksheet = true;
-            currentWorksheetId = generateWorksheetId();
-            
-            // Remplir le formulaire avec le modèle
-            document.getElementById('worksheetTitle').value = templates[templateName].title;
-            document.getElementById('worksheetDescription').value = templates[templateName].description;
-            
-            // Date du jour
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('worksheetDate').value = today;
-            
-            // Contenu du modèle
-            editor.setContent(templates[templateName].content);
-            
+
+            // Create a new worksheet using the template content
+            createNewWorksheet(); // Generates new ID, sets isNewWorksheet=true
+
+            // Apply template data (override defaults from createNewWorksheet)
+            const templateData = templates[templateName];
+            document.getElementById('worksheetTitle').value = templateData.title || 'Nouveau (Modèle)';
+            document.getElementById('worksheetDescription').value = templateData.description || '';
+            if (editor) {
+                editor.setContent(templateData.content || '<p>Modèle vide.</p>');
+                editor.setDirty(true); // Mark as needing save
+            } else {
+                 document.getElementById('worksheetContent').value = templateData.content || '';
+            }
+
             document.getElementById('saveStatus').textContent = 'Modèle chargé - Non sauvegardé';
-            
-            // Notification
-            showNotification('Modèle chargé avec succès', 'success');
+            showNotification(`Modèle '${templateData.title}' chargé comme nouvelle feuille.`, 'success');
+            document.getElementById('worksheetTitle').focus(); // Focus title after loading template
         }
-        
-        // Afficher une notification
+
         function showNotification(message, type) {
             const notification = document.getElementById('notification');
+            if (!notification) return; // Exit if notification element doesn't exist
+
             notification.textContent = message;
-            notification.className = 'notification ' + type;
-            notification.classList.add('show');
-            
+            // Ensure previous type classes are removed before adding new one
+             notification.className = 'notification'; // Reset class list
+             notification.classList.add(type); // Add success or error class
+            notification.classList.add('show'); // Trigger animation/display
+
+            // Auto-hide after 3 seconds
             setTimeout(() => {
                 notification.classList.remove('show');
             }, 3000);
         }
-        
-        // Aller à la page d'accueil
+
+        // Opens index.html in a new tab
         function goToHome() {
             window.open('index.html', '_blank');
         }
-        
-        // Initialiser la page
-        document.addEventListener('DOMContentLoaded', () => {
-            selectStudent('sham');
-        });
+
+        // Note: The old 'DOMContentLoaded' listener is removed.
+        // Initialization now happens inside the onAuthStateChanged check.
+
     </script>
-</body>
-</html>
