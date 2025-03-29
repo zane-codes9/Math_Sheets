@@ -1,208 +1,7 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tableau de Bord - Feuilles de Révision</title>
-    <!-- Firebase SDK -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.22.2/firebase-app-compat.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.22.2/firebase-database-compat.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.22.2/firebase-auth-compat.min.js"></script>
-    
-    <style>
-        /* Styles généraux */
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            color: #333;
-            line-height: 1.6;
-            margin: 0;
-            padding: 0;
-            background-color: #f9f9f9;
-        }
-        
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: white;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            border-radius: 10px;
-        }
-        
-        /* En-tête stylisée */
-        .header {
-            background-color: #4e5de3;
-            color: white;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 25px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        
-        .student-avatar {
-            display: flex;
-            align-items: center;
-            margin-right: 20px;
-        }
-        
-        .avatar-emoji {
-            font-size: 2.5em;
-            margin-right: 15px;
-        }
-        
-        .student-info {
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .student-name {
-            font-size: 1.2em;
-            font-weight: bold;
-        }
-        
-        .back-button {
-            background-color: white;
-            color: #4e5de3;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: background-color 0.3s;
-        }
-        
-        .back-button:hover {
-            background-color: #f0f0f0;
-        }
-        
-        /* Titres */
-        h1 {
-            margin: 0;
-            font-size: 1.8em;
-        }
-        
-        h2 {
-            color: #4e5de3;
-            border-bottom: 2px solid #7fc8f8;
-            padding-bottom: 10px;
-            margin-top: 0;
-        }
-        
-        /* Liste des feuilles de travail */
-        .worksheets-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 20px;
-            margin: 20px 0;
-        }
-        
-        .worksheet-card {
-            background-color: #f9f9f9;
-            border-radius: 10px;
-            padding: 15px;
-            border-left: 5px solid #4e5de3;
-            transition: transform 0.3s, box-shadow 0.3s;
-            cursor: pointer;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .worksheet-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-        
-        .worksheet-title {
-            font-weight: bold;
-            font-size: 1.1em;
-            margin-bottom: 10px;
-            color: #4e5de3;
-        }
-        
-        .worksheet-date {
-            color: #777;
-            font-size: 0.9em;
-            margin-bottom: 10px;
-        }
-        
-        .worksheet-desc {
-            margin-bottom: 10px;
-            flex-grow: 1;
-        }
-        
-        .progress-bar {
-            height: 8px;
-            background-color: #e0e0e0;
-            border-radius: 4px;
-            overflow: hidden;
-            margin-top: 10px;
-        }
-        
-        .progress-fill {
-            height: 100%;
-            background-color: #4e5de3;
-            transition: width 0.3s;
-        }
-        
-        .worksheet-footer {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 10px;
-            font-size: 0.9em;
-        }
-        
-        /* Message quand pas de feuilles */
-        .no-worksheets {
-            text-align: center;
-            padding: 30px;
-            background-color: #f9f9f9;
-            border-radius: 10px;
-            color: #777;
-        }
-        
-        /* Pied de page */
-        footer {
-            text-align: center;
-            margin-top: 30px;
-            color: #777;
-            padding: 10px;
-            font-size: 0.9em;
-            border-top: 1px solid #eee;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <!-- En-tête principale -->
-        <div class="header">
-            <div class="student-avatar">
-                <div class="avatar-emoji" id="studentEmoji">👧</div>
-                <div class="student-info">
-                    <div class="student-name" id="studentName">Chargement...</div>
-                </div>
-            </div>
-            <h1>Tableau de Bord</h1>
-            <button class="back-button" onclick="goHome()">← Accueil</button>
-        </div>
-        
-        <h2>Tes feuilles de révision</h2>
-        
-        <!-- Liste des feuilles de travail -->
-        <div class="worksheets-list" id="worksheetsList">
-            <!-- Les feuilles de travail seront générées ici -->
-        </div>
-        
-        <footer>
-            <p>Clique sur une feuille pour commencer à travailler! 🌟</p>
-        </footer>
-    </div>
-    
     <script>
-        // Configuration Firebase
+        // Configuration Firebase - MAKE SURE THESE DETAILS ARE CORRECT FOR YOUR PROJECT
         const firebaseConfig = {
-            apiKey: "AIzaSyBnFB7ZoqliCOF1a57G0cbLOEoyMGzf9QI",
+            apiKey: "AIzaSyBnFB7ZoqliCOF1a57G0cbLOEoyMGzf9QI", // Use your actual API Key
             authDomain: "sham-s-worksheets.firebaseapp.com",
             databaseURL: "https://sham-s-worksheets-default-rtdb.firebaseio.com",
             projectId: "sham-s-worksheets",
@@ -211,46 +10,120 @@
             appId: "1:408757720197:web:fd63c16cfc0fb3afc185ec",
             measurementId: "G-CZ7BSB67LV"
         };
-        
-        // Initialiser Firebase
+
+        // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
-        
-        // Obtenir l'étudiant depuis l'URL
+        const database = firebase.database(); // Database reference
+        const auth = firebase.auth(); // Authentication service reference
+
+        // --- DEFINE USER IDs (Paste the correct UIDs here) ---
+        const ADMIN_UID = "MH6iCAGIYdYIbVCc1YZPaWccHYg2"; // Your UID
+        const SHAM_UID = "wIZOcjwFwtONzhxdlENAR3oHplu1";  // Sham's UID
+        const CELINE_UID = "kIM5AGVYGFfTLKaUffO37FPfia63"; // Celine's UID
+        // --- END OF USER IDs ---
+
+        // Get the target student from the URL parameter (?student=...)
         const urlParams = new URLSearchParams(window.location.search);
-        const student = urlParams.get('student');
-        
-        // Si aucun étudiant n'est spécifié, retourner à la page d'accueil
-        if (!student) {
-            window.location.href = 'index.html';
+        const targetStudent = urlParams.get('student'); // Will be 'sham' or 'celine'
+
+        // --- Authentication Check ---
+        auth.onAuthStateChanged(user => {
+            if (!user) {
+                // 1. NO USER LOGGED IN: Redirect to login page immediately
+                console.log('Dashboard: No user logged in. Redirecting to index.html');
+                window.location.href = 'index.html';
+            } else {
+                // 2. USER IS LOGGED IN: Verify they are allowed to see this specific dashboard
+                console.log(`Dashboard: User ${user.uid} is logged in. Checking authorization for student: ${targetStudent}`);
+
+                let isAuthorized = false;
+                let expectedUid = null;
+
+                if (targetStudent === 'sham') {
+                    expectedUid = SHAM_UID;
+                } else if (targetStudent === 'celine') {
+                    expectedUid = CELINE_UID;
+                }
+                // Add Admin check if Admins should also be able to view student dashboards directly
+                 // else if (user.uid === ADMIN_UID) {
+                 //    isAuthorized = true; // Optional: Allow admin direct view
+                 // }
+
+
+                // Check if the logged-in user's UID matches the expected UID for this dashboard
+                if (expectedUid && user.uid === expectedUid) {
+                    isAuthorized = true;
+                }
+
+                if (isAuthorized) {
+                    // 3. AUTHORIZED: Proceed to load the dashboard content
+                    console.log(`Dashboard: User ${user.uid} authorized for ${targetStudent}'s dashboard.`);
+                    initializeDashboard(); // Call the function that sets up the page
+                } else {
+                    // 4. NOT AUTHORIZED: Logged in, but wrong user for this dashboard
+                    console.error(`Dashboard: Authorization FAILED. User ${user.uid} attempted to access ${targetStudent}'s dashboard.`);
+                    alert("Accès Refusé. Vous n'êtes pas autorisé à voir ce tableau de bord.");
+
+                    // Redirect the user appropriately
+                    if (user.uid === SHAM_UID) {
+                        window.location.href = 'dashboard.html?student=sham'; // Send Sham to her own dashboard
+                    } else if (user.uid === CELINE_UID) {
+                        window.location.href = 'dashboard.html?student=celine'; // Send Celine to her own dashboard
+                    } else if (user.uid === ADMIN_UID) {
+                         window.location.href = 'admin.html'; // Send Admin to admin page
+                    } else {
+                         // Unknown user - logout and send to index
+                        auth.signOut().then(() => { window.location.href = 'index.html'; });
+                    }
+                }
+            }
+        });
+        // --- End of Authentication Check ---
+
+
+        // Function to set up and load the dashboard content (only called if authorized)
+        function initializeDashboard() {
+            // Make sure the target student is valid before proceeding
+             if (!targetStudent || (targetStudent !== 'sham' && targetStudent !== 'celine')) {
+                 console.error('Dashboard: Invalid or missing student parameter in URL.');
+                 alert("Erreur: Le nom de l'élève est manquant ou invalide dans l'URL.");
+                 window.location.href = 'index.html'; // Or handle error differently
+                 return;
+             }
+             setupStudentUI();
+             loadWorksheets();
         }
-        
+
         // Configurer l'interface utilisateur en fonction de l'étudiant
         function setupStudentUI() {
             const studentName = document.getElementById('studentName');
             const studentEmoji = document.getElementById('studentEmoji');
-            
-            if (student === 'sham') {
+
+            if (targetStudent === 'sham') {
                 studentName.textContent = 'Sham';
                 studentEmoji.textContent = '👧';
                 document.title = 'Tableau de Bord de Sham';
-            } else if (student === 'celine') {
+            } else if (targetStudent === 'celine') {
                 studentName.textContent = 'Celine';
                 studentEmoji.textContent = '👩';
                 document.title = 'Tableau de Bord de Celine';
             }
+            // Add admin case here if needed
+            // else {
+            //      studentName.textContent = 'Admin View'; // Example if admin views directly
+            // }
         }
-        
+
         // Charger les feuilles de travail de l'étudiant
         function loadWorksheets() {
-            const worksheetsRef = database.ref(`worksheets/${student}`);
-            
+            const worksheetsRef = database.ref(`worksheets/${targetStudent}`); // Use targetStudent from URL
+
             worksheetsRef.once('value', (snapshot) => {
                 const worksheetsList = document.getElementById('worksheetsList');
-                worksheetsList.innerHTML = '';
-                
+                worksheetsList.innerHTML = ''; // Clear any previous content (like loading message)
+
                 const data = snapshot.val();
-                
+
                 if (!data) {
                     // Aucune feuille de travail disponible
                     const noWorksheets = document.createElement('div');
@@ -260,72 +133,107 @@
                         <p>Revenez bientôt pour de nouvelles feuilles! 📚</p>
                     `;
                     worksheetsList.appendChild(noWorksheets);
+                    console.log(`Dashboard: No worksheets found for ${targetStudent}.`);
                     return;
                 }
-                
+
+                console.log(`Dashboard: Loading worksheets for ${targetStudent}...`);
                 // Créer une carte pour chaque feuille de travail
-                Object.keys(data).forEach(worksheetId => {
+                Object.keys(data).sort((a, b) => {
+                     // Optional: Sort worksheets, e.g., by date if available, otherwise by title
+                     const dateA = data[a].date || '0';
+                     const dateB = data[b].date || '0';
+                     if (dateB !== dateA) return dateB.localeCompare(dateA); // Newest first
+                     return (data[a].title || '').localeCompare(data[b].title || ''); // Then by title
+                 }).forEach(worksheetId => {
                     const worksheet = data[worksheetId];
-                    
-                    // Calculer la progression
+
+                    // Calculer la progression (Ensure progress exists and is an object)
                     let progress = 0;
                     let totalQuestions = 0;
                     let answeredQuestions = 0;
-                    
-                    if (worksheet.progress) {
-                        // Compter le nombre de questions répondues
-                        Object.keys(worksheet.progress).forEach(key => {
-                            if (key.startsWith('answer')) {
-                                totalQuestions++;
-                                if (worksheet.progress[key].trim() !== '') {
-                                    answeredQuestions++;
-                                }
-                            }
-                        });
-                        
+
+                    if (worksheet.progress && typeof worksheet.progress === 'object') {
+                        // Count inputs within the dynamically loaded content
+                        // Create a temporary div to parse the HTML content
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = worksheet.content || ''; // Use worksheet content
+                        const inputsInContent = tempDiv.querySelectorAll('.answer-input');
+                        totalQuestions = inputsInContent.length;
+
+                        // Count answered questions based on saved progress data
+                        answeredQuestions = Object.keys(worksheet.progress)
+                                                .filter(key => worksheet.progress[key] !== null && String(worksheet.progress[key]).trim() !== '')
+                                                .length;
+
+                        // Ensure answered questions don't exceed total identified questions
+                        answeredQuestions = Math.min(answeredQuestions, totalQuestions);
+
                         if (totalQuestions > 0) {
-                            progress = (answeredQuestions / totalQuestions) * 100;
+                            progress = Math.round((answeredQuestions / totalQuestions) * 100);
+                        } else {
+                           // If no inputs found in content, check if progress object has keys anyway
+                           // This might indicate old data or inputs removed from content
+                           if (Object.keys(worksheet.progress).length > 0) {
+                               // Decide how to handle this - maybe show 100% if progress exists but no inputs?
+                               // Or calculate based on keys in progress object? Let's assume 0% if no inputs found.
+                               progress = 0;
+                           }
                         }
+
+                    } else {
+                         // If no progress object, check content for inputs to determine total questions
+                         const tempDiv = document.createElement('div');
+                         tempDiv.innerHTML = worksheet.content || '';
+                         const inputsInContent = tempDiv.querySelectorAll('.answer-input');
+                         totalQuestions = inputsInContent.length;
+                         answeredQuestions = 0;
+                         progress = 0;
                     }
-                    
+
+
                     // Créer la carte de la feuille de travail
                     const card = document.createElement('div');
                     card.className = 'worksheet-card';
-                    card.onclick = () => openWorksheet(worksheetId);
-                    
+                    card.onclick = () => openWorksheet(worksheetId); // Keep original function name
+
                     card.innerHTML = `
-                        <div class="worksheet-title">${worksheet.title || 'Feuille de révision'}</div>
-                        <div class="worksheet-date">${worksheet.date || 'Date non spécifiée'}</div>
-                        <div class="worksheet-desc">${worksheet.description || 'Feuille de travail mathématique'}</div>
-                        <div class="progress-bar">
+                        <div class="worksheet-title">${worksheet.title || 'Feuille sans titre'}</div>
+                        <div class="worksheet-date">${worksheet.date ? new Date(worksheet.date).toLocaleDateString('fr-FR') : 'Date non spécifiée'}</div>
+                        <div class="worksheet-desc">${worksheet.description || 'Description non disponible'}</div>
+                        <div class="progress-bar" title="${progress}% complété (${answeredQuestions}/${totalQuestions})">
                             <div class="progress-fill" style="width: ${progress}%"></div>
                         </div>
                         <div class="worksheet-footer">
-                            <span>${Math.round(progress)}% complété</span>
+                            <span>${progress}% complété</span>
                             <span>${answeredQuestions}/${totalQuestions} questions</span>
                         </div>
                     `;
-                    
+
                     worksheetsList.appendChild(card);
                 });
+            }).catch(error => {
+                 console.error(`Dashboard: Error loading worksheets for ${targetStudent}:`, error);
+                 document.getElementById('worksheetsList').innerHTML = `<p style="color: red;">Erreur lors du chargement des feuilles de travail.</p>`;
             });
         }
-        
-        // Ouvrir une feuille de travail
+
+        // Ouvrir une feuille de travail (Navigates to worksheet page)
         function openWorksheet(worksheetId) {
-            window.location.href = `worksheet.html?student=${student}&id=${worksheetId}`;
+            // Pass the currently viewed student name in the URL
+            window.location.href = `worksheet.html?student=${targetStudent}&id=${worksheetId}`;
         }
-        
-        // Retourner à la page d'accueil
+
+        // Retourner à la page d'accueil (index.html - Login Page)
         function goHome() {
+            // Consider logging out or just going to index page
+            // For simplicity, let's just go to index.html
             window.location.href = 'index.html';
+             // If you want to ensure logout:
+             // auth.signOut().then(() => { window.location.href = 'index.html'; });
         }
-        
-        // Initialiser la page
-        document.addEventListener('DOMContentLoaded', () => {
-            setupStudentUI();
-            loadWorksheets();
-        });
+
+        // Note: The old 'DOMContentLoaded' listener is removed.
+        // Initialization now happens inside the onAuthStateChanged check.
+
     </script>
-</body>
-</html>
