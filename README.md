@@ -1,1 +1,1 @@
-Make sure to use your log-in!
+Make sure to use your log-in
